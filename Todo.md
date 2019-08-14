@@ -1,5 +1,10 @@
 # Todo List for Automate All The Things
 
+## Episode 4 Note
+
+- Add PC provisioning scripts
+- Vault / Secrets / KVM on the fly (VAULT ALL THE THINGS)
+
 ## Original Blog Post List
 
 - Kubernetes / Rancher Provisioning / Rancher CLI
