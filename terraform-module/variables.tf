@@ -35,3 +35,20 @@ variable "azure_region" {
   description = "Region for the Rancher cluster"
 }
 
+# Rancher Cluster
+variable "rancher-etcd-node-count" {
+  description = "Number of etcd nodes in the RKE Cluster for Rancher HA"
+  default = 1 
+}
+
+variable "rancher-controlplane-node-count" {
+  description = "Number of controlplane nodes in the RKE Cluster for Rancher HA"
+  default = 1 
+}
+
+variable "rancher-worker-node-count" {
+  description = "Number of worker nodes in the RKE Cluster for Rancher HA"
+  default = 1 
+}
+
+
