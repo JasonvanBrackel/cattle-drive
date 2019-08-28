@@ -49,3 +49,4 @@
   - Use the Azure AD provider to create temporary automation users for terraform
 - SDN
 - Horizontal Autoscaling
+- Terraform Remote State

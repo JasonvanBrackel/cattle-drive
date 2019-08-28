@@ -28,7 +28,6 @@ variable "environment" {
 # Azure Environment Variables
 variable "azure_resource_group_name" {
   description = "Resource Group for the Rancher cluster"
-
 }
 
 variable "azure_region" {

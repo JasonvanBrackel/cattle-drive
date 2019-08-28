@@ -24,6 +24,8 @@ service_principal_name="TheRanchCast"
 # Create the Service Principal scoped to the resource group
 service_principal=$(az ad sp create-for-rbac -n $service_principal_name --role contributor)
 
+sleep 10
+
 # Login to Azure with the Service Principal
 az login --service-principal -u $(echo $service_principal | jq .appId -r) -p $(echo $service_principal | jq .password -r) --tenant $(echo $service_principal | jq .tenant -r)
 
