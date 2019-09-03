@@ -1,18 +1,16 @@
 #!/bin/bash
-set -e
 
 # Login to Azure CLI first
-# az login
+az login --use-device-code
 
 # Init Terraform
-# terraform init
+terraform init
 
 # TODO: Check our path
-cd terraform-module
 
 # Variables
 resource_group_name="automate-all-the-things"
-service_principal_name="TheRanchCast"
+export service_principal_name="TheRanchCast"
 
 # Todo: Create SP to create terraform to create group
 # Todo: Create SP using the Azure AD Terrarom Module to create a scoped SP
