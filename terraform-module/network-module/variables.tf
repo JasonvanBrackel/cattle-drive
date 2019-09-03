@@ -4,18 +4,7 @@ variable "resource_group" {
 
 }
 
-variable "region" {
-  description = "Region for the Rancher cluster"
-}
-
 # Output
-output "resource-group" {
-  value = azurerm_resource_group.resource-group
-}
-
-output "location" {
-  value = azurerm_resource_group.resource-group.location
-}
 
 output "subnet-id" {
   value = azurerm_subnet.subnet.id
