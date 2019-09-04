@@ -2,6 +2,15 @@ locals {
   prefix = var.prefix
 }
 
+
+resource "azurerm_public_ip" "publicIp" {
+  count                        = var.node_count
+  name                         = "${local.prefix}-${count.index}-publicIp"
+  location                     = var.resource_group.location
+  resource_group_name          = var.resource_group.name
+  allocation_method = "Static"
+}
+
 resource "azurerm_network_interface" "nic" {
   count               = var.node_count
   name                = "${local.prefix}-${count.index}-nic"
@@ -12,6 +21,7 @@ resource "azurerm_network_interface" "nic" {
     name                          = "${local.prefix}-ip-config-${count.index}"
     subnet_id                     = var.subnet_id
     private_ip_address_allocation = "dynamic"
+    public_ip_address_id          = azurerm_public_ip.publicIp[count.index].id
   }
 }
 
@@ -51,4 +61,23 @@ resource "azurerm_virtual_machine" "vm" {
       key_data = "${file(var.node_definition.ssh_keypath)}"
     }
   }
+
+   provisioner "remote-exec" {
+    inline = [
+      "curl https://releases.rancher.com/install-docker/${var.docker_version}.sh | sh && sudo usermod -a -G docker  ${var.node_definition.admin_username}",
+    ]
+
+    connection {
+      host     = azurerm_public_ip.publicIp[count.index].ip_address
+      type     = "ssh"
+      user     = "${var.node_definition.admin_username}"
+      private_key = "${file("${var.node_definition.ssh_keypath_private}")}"
+    }
+  }
+}
+
+locals {
+  nodes_output = azurerm_virtual_machine.vm
+  public_ip_address_output = azurerm_public_ip.publicIp.*
+  private_ip_address_output = azurerm_network_interface.nic.*  
 }

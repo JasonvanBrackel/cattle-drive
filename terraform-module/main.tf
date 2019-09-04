@@ -23,25 +23,26 @@ module "network" {
   resource_group = azurerm_resource_group.resource-group
 }
 
-module "jump" {
-  source = "./node-module"
-  prefix = "jump"
+# module "jump" {
+#   source = "./node-module"
+#   prefix = "jump"
   
-  resource_group = azurerm_resource_group.resource-group
-  node_count = 1
-  subnet_id = module.network.subnet-id
+#   resource_group = azurerm_resource_group.resource-group
+#   node_count = 1
+#   subnet_id = module.network.subnet-id
 
-  node_definition = {
-    admin_username = "jason"
-    ssh_keypath = "~/.ssh/id_rsa.pub"
-    size = "Standard_DS1_v2"
-    disk_type = "Premium_LRS"
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
-    version   = "latest"
-  }
-}
+#   node_definition = {
+#     admin_username = "jason"
+#     ssh_keypath = "~/.ssh/id_rsa.pub"
+#     ssh_keypath_private = "~/.ssh/id_rsa"
+#     size = "Standard_DS1_v2"
+#     disk_type = "Premium_LRS"
+#     publisher = "Canonical"
+#     offer     = "UbuntuServer"
+#     sku       = "16.04-LTS"
+#     version   = "latest"
+#   }
+# }
 
 # Etcd Nodes
 module "etcd" {
@@ -55,6 +56,7 @@ module "etcd" {
   node_definition = {
     admin_username = "jason"
     ssh_keypath = "~/.ssh/id_rsa.pub"
+    ssh_keypath_private = "~/.ssh/id_rsa"
     size = "Standard_DS1_v2"
     disk_type = "Premium_LRS"
     publisher = "Canonical"
@@ -62,6 +64,8 @@ module "etcd" {
     sku       = "16.04-LTS"
     version   = "latest"
   }
+
+  docker_version = "18.09"
 }
 
 # Control Plane (Master) Nodes
@@ -76,6 +80,7 @@ module "controlPlane" {
   node_definition = {
     admin_username = "jason"
     ssh_keypath = "~/.ssh/id_rsa.pub"
+    ssh_keypath_private = "~/.ssh/id_rsa"
     size = "Standard_DS1_v2"
     disk_type = "Premium_LRS"
     publisher = "Canonical"
@@ -83,9 +88,11 @@ module "controlPlane" {
     sku       = "16.04-LTS"
     version   = "latest"
   }
+
+  docker_version = "18.09"
 }
 
-module "workers" {
+module "worker" {
   source = "./node-module"
   prefix = "worker"
   
@@ -96,11 +103,49 @@ module "workers" {
   node_definition = {
     admin_username = "jason"
     ssh_keypath = "~/.ssh/id_rsa.pub"
+    ssh_keypath_private = "~/.ssh/id_rsa"
     size = "Standard_DS1_v2"
     disk_type = "Premium_LRS"
     publisher = "Canonical"
     offer     = "UbuntuServer"
     sku       = "16.04-LTS"
     version   = "latest"
+  }
+
+  docker_version = "18.09"
+}
+
+resource rke_cluster "rancher_cluster" {
+  dynamic nodes {
+    for_each = module.etcd.nodes
+    content {
+      address = module.etcd.publicIps[nodes.key].ip_address
+      internal_address = module.etcd.privateIps[nodes.key].private_ip_address
+      user    = module.etcd.node_definition.admin_username
+      role    = [module.etcd.prefix]
+      ssh_key = file(module.etcd.node_definition.ssh_keypath_private)
+    }
+  }
+
+  dynamic nodes {
+    for_each = module.controlPlane.nodes
+    content {
+      address = module.controlPlane.publicIps[nodes.key].ip_address
+      internal_address = module.controlPlane.privateIps[nodes.key].private_ip_address
+      user    = module.controlPlane.node_definition.admin_username
+      role    = ["controlplane"]
+      ssh_key = file(module.controlPlane.node_definition.ssh_keypath_private)
+    }
+  }
+
+  dynamic nodes {
+    for_each = module.worker.nodes
+    content {
+      address = module.worker.publicIps[nodes.key].ip_address
+      internal_address = module.worker.privateIps[nodes.key].private_ip_address
+      user    = module.worker.node_definition.admin_username
+      role    = [module.worker.prefix]
+      ssh_key = file(module.worker.node_definition.ssh_keypath_private)
+    }
   }
 }

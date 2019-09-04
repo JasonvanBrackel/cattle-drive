@@ -17,6 +17,12 @@ variable "subnet_id" {
   description = "Subnet where the nics are created."
 }
 
+variable "docker_version" {
+  description = "Version of docker to install on the nodes."
+  
+}
+
+
 
 
 variable "node_definition" {
@@ -25,6 +31,7 @@ variable "node_definition" {
   default = {
     admin_username = "admin"
     ssh_keypath = "~/.ssh/id_rsa.pub"
+    ssh_keypath_private = "~/.ssh/id_rsa"
     size = "Standard_DS1_v2"
     disk_type = "Ultra_disk"
     publisher = "Canonical"
@@ -33,5 +40,3 @@ variable "node_definition" {
     version   = "latest"
   }
 }
-
-## Output Variables
