@@ -55,26 +55,22 @@ resource "azurerm_virtual_machine" "vm" {
   os_profile {
     computer_name = "${local.prefix}-${count.index}-vm"
     admin_username = var.node-definition.admin-username
-    custom_data    = templatefile("./cloud-init.template", { docker-version = var.node-definition.docker-version, admin-username = var.node-definition.admin-username, additionalCommand = var.additionalCommand  })
+    admin_password = var.node-definition.admin-password
   }
-  os_profile_linux_config {
-    disable_password_authentication = true    
-    ssh_keys {
-      path     = "/home/${var.node-definition.admin-username}/.ssh/authorized_keys"
-      key_data = file(var.node-definition.ssh-keypath)
-    }
+  
+  os_profile_windows_config {
+    provision_vm_agent = true
   }
 }
 
-resource "null_resource" "wait-for-cloud-init" {
-  depends_on = [azurerm_virtual_machine.vm]
-  provisioner "local-exec" {
-    command = "sleep 180"
-  }
-}
+resource "azurerm_virtual_machine_extension" "join-rancher" {
+  name                 = "join-rancher"
+  location             = var.resource-group.location
+  resource_group_name  = var.resource-group.name
+  virtual_machine_name = azurerm_virtual_machine.vm.name
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.0"
 
-locals {
-  nodes_output = azurerm_virtual_machine.vm
-  public_ip_address_output = azurerm_public_ip.publicIp.*
-  private_ip_address_output = azurerm_network_interface.nic.*  
+  settings = templatefile("../join-rancher.template", {commandToExecute=var.commandToExecute})
 }

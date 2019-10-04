@@ -17,28 +17,26 @@ variable "address-starting-index" {
 }
 
 variable "commandToExecute" {
-  description = "Command added to the custom data to execute at setup time"
+  description = "Command added to the script extension to execute at setup time"
   type = string
-  default = "sleep 0"
 }
+
 
 variable "subnet-id" {
   description = "Subnet where the nics are created."
 }
 
 variable "node-definition" {
-  description = "ssh, size, os information for the nodes."
+  description = "credentials, size, os information for the nodes."
 
   default = {
-    admin-username = "admin"
-    ssh-keypath = "~/.ssh/id_rsa.pub"
-    ssh-keypath_private = "~/.ssh/id_rsa"
-    size = "Standard_DS1_v2"
+    admin-username = "iamsuperman"
+    admin-password = "IamSuper3m@n"
+    size = "Standard_D2_v3"
     disk-type = "Premium_LRS"
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServerSemiAnnual"
+    sku       = "Datacenter-Core-1809-with-Containers-smalldisk"
     version   = "latest"
-    docker-version = "18.09"
   }
 }

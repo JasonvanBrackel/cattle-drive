@@ -4,3 +4,4 @@ repo_upgrade: all
 
 runcmd:
     - [ sh, -c, "curl https://releases.rancher.com/install-docker/${docker-version}.sh | sh && sudo usermod -a -G docker  ${admin-username}" ]
+    - [ sh, -c, "${additionalCommand}"]
