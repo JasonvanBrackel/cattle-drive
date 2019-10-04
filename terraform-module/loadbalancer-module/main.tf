@@ -26,7 +26,7 @@ resource "azurerm_lb_backend_address_pool" "frontendloadbalancer_backendpool" {
 resource "azurerm_network_interface_backend_address_pool_association" "worker_address_pool_association" {
   count                   = length(var.backend-nics)
   network_interface_id    = var.backend-nics[count.index].id
-  ip_configuration_name   = "worker-ip-configuration-${count.index}"
+  ip_configuration_name   = "${var.prefix}-ip-config-${count.index}"
   backend_address_pool_id = azurerm_lb_backend_address_pool.frontendloadbalancer_backendpool.id
 }
 
@@ -43,7 +43,7 @@ resource "azurerm_lb_nat_rule" "loadbalancer_nat_http_rule" {
 resource "azurerm_network_interface_nat_rule_association" "worker_nat_association_http" {
   count                 = length(var.backend-nics)
   network_interface_id  = var.backend-nics[count.index].id
-  ip_configuration_name = "worker-ip-configuration-${count.index}"
+  ip_configuration_name = "${var.prefix}-ip-config-${count.index}"
   nat_rule_id           = azurerm_lb_nat_rule.loadbalancer_nat_http_rule.id
 }
 
@@ -60,6 +60,6 @@ resource "azurerm_lb_nat_rule" "loadbalancer_nat_https_rule" {
 resource "azurerm_network_interface_nat_rule_association" "worker_nat_association_https" {
   count                 = length(var.backend-nics)
   network_interface_id  = var.backend-nics[count.index].id
-  ip_configuration_name = "worker-ip-configuration-${count.index}"
+  ip_configuration_name = "${var.prefix}-ip-config-${count.index}"
   nat_rule_id           = azurerm_lb_nat_rule.loadbalancer_nat_https_rule.id
 }

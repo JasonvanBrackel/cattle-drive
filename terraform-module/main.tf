@@ -152,6 +152,7 @@ resource "local_file" "kube_cluster_yaml" {
 module "front-end-lb" {
   source = "./loadbalancer-module"
 
+  prefix = "worker"
   resource-group = module.rancher-resource-group.resource-group
   domain-name = var.rancher-domain-name
   backend-nics = module.rancher-worker.privateIps

@@ -1,3 +1,7 @@
+variable "prefix" {
+  description = "ip configuration name prefix"
+}
+
 variable "resource-group" {
   description = "Resource group for the front end load balancer."
 }
