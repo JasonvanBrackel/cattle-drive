@@ -17,6 +17,6 @@ resource "cloudflare_record" "domain" {
   name   = var.domain-name
   value  = var.ip-address
   type   = "A"
-  ttl    = "1"
+  ttl    = "120"
   proxied = "false"
 }
