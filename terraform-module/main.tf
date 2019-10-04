@@ -3,6 +3,7 @@ provider "azurerm" {
 
 }
 
+
 ## Resource Groups 
 # Rancher Resource Group
 module "rancher-resource-group" {
@@ -146,4 +147,21 @@ EOL
 resource "local_file" "kube_cluster_yaml" {
   filename = "${path.root}/kube_config_cluster.yml"
   content = rke_cluster.rancher-cluster.kube_config_yaml
+}
+
+module "front-end-lb" {
+  source = "./loadbalancer-module"
+
+  resource-group = module.rancher-resource-group.resource-group
+  domain-name = var.rancher-domain-name
+  backend-nics = module.rancher-worker.privateIps
+}
+
+module "cloudflare-dns" {
+  source = "./cloudflare-module"
+  
+  domain-name = var.rancher-domain-name
+  cloudflare-email = var.cloudflare-email
+  cloudflare-token = var.cloudflare-token
+  ip-address = module.front-end-lb.ip-address
 }

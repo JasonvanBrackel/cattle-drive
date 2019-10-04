@@ -4,10 +4,12 @@ config_path="$(pwd)/kube_config_cluster.yml"
 
 
 # Run Terraform  
-terraform apply -var rancher-resource-group-name="cattle-drive-rancher" \
-                -var rancher-region="eastus" \
-                -var k8s-resource-group-name="cattle-drive-k8s" \
-                -var k8s-region="eastus2"
+terraform apply
+terraform output -json >> output.json
+
+$lets_encrypt_email =$(cat output.json | jq -r '.lets-encrypt-environment')
+$lets_encrypt_environment = $(cat output.json | jq -r '.lets-encrypt-environment')
+$rancher_hostname = $(cat output.json | jq -r '.rancher-domain-name') 
 
 # Initialize Helm
 helm init --service-account tiller --kube-context local --kubeconfig "$config_path" --wait
@@ -39,8 +41,8 @@ helm install rancher-stable/rancher \
   --kube-context local \
   --kubeconfig "$config_path" \
   --set ingress.tls.source="letsEncrypt" \
-  --set letsEncrypt.email="$email" \
-  --set letsEncrypt.environment="$environment" \
+  --set letsEncrypt.email="$lets_encrypt_email" \
+  --set letsEncrypt.environment="$lets_encrypt_environment" \
   --set hostname="$rancher_hostname" \
   --set auditLog.level="1" \
   --set addLocal="true" \
