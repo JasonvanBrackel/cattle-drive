@@ -13,7 +13,7 @@ data "cloudflare_zones" "zones" {
 
 # Add a record to the domain
 resource "cloudflare_record" "domain" {
-  zone_id = data.cloudflare_zones.zones.id
+  zone_id = data.cloudflare_zones.zones.zones[0].id
   name   = var.domain-name
   value  = var.ip-address
   type   = "A"

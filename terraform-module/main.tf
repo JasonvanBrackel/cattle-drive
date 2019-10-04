@@ -85,6 +85,24 @@ module "rancher-worker" {
   node-definition = local.node-definition
 }
 
+module "front-end-lb" {
+  source = "./loadbalancer-module"
+
+  prefix = "worker"
+  resource-group = module.rancher-resource-group.resource-group
+  domain-name = var.rancher-domain-name
+  backend-nics = module.rancher-worker.privateIps
+}
+
+module "cloudflare-dns" {
+  source = "./cloudflare-module"
+  
+  domain-name = var.rancher-domain-name
+  cloudflare-email = var.cloudflare-email
+  cloudflare-token = var.cloudflare-token
+  ip-address = module.front-end-lb.ip-address
+}
+
 resource rke_cluster "rancher-cluster" {
   depends_on = [module.rancher-etcd,module.rancher-control,module.rancher-worker]
   dynamic nodes {
@@ -149,20 +167,29 @@ resource "local_file" "kube_cluster_yaml" {
   content = rke_cluster.rancher-cluster.kube_config_yaml
 }
 
-module "front-end-lb" {
-  source = "./loadbalancer-module"
-
-  prefix = "worker"
-  resource-group = module.rancher-resource-group.resource-group
-  domain-name = var.rancher-domain-name
-  backend-nics = module.rancher-worker.privateIps
+resource "null_resource" "install_rancher" {
+  depends_on = [local_file.kube_cluster_yaml]
+  provisioner "local-exec" {
+    command = templatefile("../install-rancher.sh", { lets-encrypt-email = var.lets-encrypt-email, lets-encrypt-environment = var.lets-encrypt-environment, rancher-domain-name = var.rancher-domain-name })
+  }
 }
 
-module "cloudflare-dns" {
-  source = "./cloudflare-module"
-  
-  domain-name = var.rancher-domain-name
-  cloudflare-email = var.cloudflare-email
-  cloudflare-token = var.cloudflare-token
-  ip-address = module.front-end-lb.ip-address
+resource "null_resource" "wait_for_rancher_ingress" {
+  depends_on = [null_resource.install_rancher]
+  provisioner "local-exec" {
+    command = "sleep 30"
+  }
+}
+
+resource "random_string" "random" {
+  depends_on = [null_resource.wait_for_rancher_ingress]
+  length = 32
+  special = true
+}
+
+module "rancherbootstrap-module" {
+  source = "./rancherbootstrap-module"
+
+  rancher-url = "https://${var.rancher-domain-name}/"
+  admin-password = random_string.random.result
 }
