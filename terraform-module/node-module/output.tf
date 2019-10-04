@@ -10,8 +10,8 @@ output "privateIps" {
   value = local.private_ip_address_output
 }
 
-output "node_definition" {
-  value = var.node_definition
+output "node-definition" {
+  value = var.node-definition
 }
 
 output "prefix" {

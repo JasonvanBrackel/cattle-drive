@@ -1,45 +1,47 @@
 #!/bin/bash
 
-# Login to Azure CLI first
-az login --use-device-code
+config_path="$(pwd)/kube_config_cluster.yml"
 
-# Init Terraform
-terraform init
 
-# TODO: Check our path
+# Run Terraform  
+terraform apply -var rancher-resource-group-name="cattle-drive-rancher" \
+                -var rancher-region="eastus" \
+                -var k8s-resource-group-name="cattle-drive-k8s" \
+                -var k8s-region="eastus2"
 
-# Variables
-resource_group_name="automate-all-the-things"
-export service_principal_name="TheRanchCast"
+# Initialize Helm
+helm init --service-account tiller --kube-context local --kubeconfig "$config_path" --wait
 
-# Todo: Create SP to create terraform to create group
-# Todo: Create SP using the Azure AD Terrarom Module to create a scoped SP
-# Todo: Remove SP scripting from the automate
+# Install Cert Manager
+kubectl --kubeconfig="$config_path" apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.9/deploy/manifests/00-crds.yaml
+kubectl --kubeconfig="$config_path" create namespace cert-manager
+kubectl --kubeconfig="$config_path" label namespace cert-manager certmanager.k8s.io/disable-validation=true
 
-# Create our AD Group for a Least Privlege Serivce Principal
-# resource_group=$(az group create -l eastus2 -n $resource_group_name)
+helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
+helm repo add rancher-alpha https://releases.rancher.com/server-charts/alpha
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
 
-# Create the Service Principal scoped to the resource group
-service_principal=$(az ad sp create-for-rbac -n $service_principal_name --role contributor)
+helm install \
+  --name cert-manager \
+  --namespace cert-manager \
+  --kube-context local \
+  --kubeconfig "$config_path" \
+  --version v0.9.1 \
+  --wait \
+  jetstack/cert-manager
 
-sleep 10
-
-# Login to Azure with the Service Principal
-az login --service-principal -u $(echo $service_principal | jq .appId -r) -p $(echo $service_principal | jq .password -r) --tenant $(echo $service_principal | jq .tenant -r)
-
-# Set local variables for Terraform
-export TF_VAR_subscription_id=$(az account show | jq .id -r)
-export TF_VAR_client_id=$(echo $service_principal | jq .appId -r)
-export TF_VAR_client_secret=$(echo $service_principal | jq .password -r)
-export TF_VAR_tenant_id=$(echo $service_principal | jq .tenant -r)
-#TODO fix this automation so we grab the enviornment dynamically.
-export TF_VAR_environment="public"
-#TODO Create our Service Principal and Resource Group from Code and Dynamically populate (Least Privlege)
-export TF_VAR_azure_resource_group_name=$resource_group_name 
-export TF_VAR_azure_region=eastus2
-#export TF_VAR_azure_resource_group_name=$(echo $resource_group | jq .name -r)
-
-# Run Terraform 
-terraform apply -auto-approve
-
-# TODO: DO something fun with the output
+# Install Rancher
+helm install rancher-stable/rancher \
+  --version v2.2.8 \
+  --name rancher \
+  --namespace cattle-system \
+  --kube-context local \
+  --kubeconfig "$config_path" \
+  --set ingress.tls.source="letsEncrypt" \
+  --set letsEncrypt.email="$email" \
+  --set letsEncrypt.environment="$environment" \
+  --set hostname="$rancher_hostname" \
+  --set auditLog.level="1" \
+  --set addLocal="true" \
+  --wait
