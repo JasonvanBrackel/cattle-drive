@@ -3,9 +3,7 @@
 # Configuration Path from RKE Provider
 config_path="$(pwd)/kube_config_cluster.yml"
 
-terraform output -json > output.json
-
-# Get Terraform Outputs
+# Terraform Templates
 lets_encrypt_email=${lets-encrypt-email}
 lets_encrypt_environment=${lets-encrypt-environment}
 rancher_hostname=${rancher-domain-name}
