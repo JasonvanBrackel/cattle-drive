@@ -37,9 +37,7 @@ helm install rancher-alpha/rancher \
   --namespace cattle-system \
   --kube-context local \
   --kubeconfig "$config_path" \
-  --set ingress.tls.source="letsEncrypt" \
-  --set letsEncrypt.email="$lets_encrypt_email" \
-  --set letsEncrypt.environment="$lets_encrypt_environment" \
+  --set ingress.tls.source="rancher" \
   --set hostname="$rancher_hostname" \
   --set auditLog.level="1" \
   --set addLocal="true" \

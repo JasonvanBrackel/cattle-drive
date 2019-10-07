@@ -94,15 +94,6 @@ module "front-end-lb" {
   backend-nics = module.rancher-worker.privateIps
 }
 
-module "cloudflare-dns" {
-  source = "./cloudflare-module"
-  
-  domain-name = var.rancher-domain-name
-  cloudflare-email = var.cloudflare-email
-  cloudflare-token = var.cloudflare-token
-  ip-address = module.front-end-lb.ip-address
-}
-
 resource rke_cluster "rancher-cluster" {
   depends_on = [module.rancher-etcd,module.rancher-control,module.rancher-worker]
   dynamic nodes {
@@ -162,27 +153,54 @@ roleRef:
 EOL
 }
 
-resource "local_file" "kube_cluster_yaml" {
+resource "local_file" "kube-cluster-yaml" {
   filename = "${path.root}/kube_config_cluster.yml"
   content = rke_cluster.rancher-cluster.kube_config_yaml
 }
 
-resource "null_resource" "install_rancher" {
-  depends_on = [local_file.kube_cluster_yaml]
+# ############### Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
+# module "cloudflare-dns" {
+#   source = "./cloudflare-module"
+  
+#   domain-name = var.rancher-domain-name
+#   cloudflare-email = var.cloudflare-email
+#   cloudflare-token = var.cloudflare-token
+#   ip-address = module.front-end-lb.ip-address
+# }
+
+
+# resource "null_resource" "flush-dns-cache" {
+#   depends_on = [local_file.kube-cluster-yaml]
+#   provisioner "local-exec" {
+#     command = "sudo service network-manager restart"
+#   }
+# }
+
+# resource "null_resource" "wait-for-dns" {
+#   depends_on = [null_resource.flush-dns-cache]
+#   provisioner "local-exec" {
+#     command = "sleep 30"
+#   }
+# }
+# ############### END Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
+
+resource "null_resource" "install-rancher" {
+  # depends_on = [null_resource.wait-for-dns]
+  depends_on = [local_file.kube-cluster-yaml]
   provisioner "local-exec" {
-    command = templatefile("../install-rancher.sh", { lets-encrypt-email = var.lets-encrypt-email, lets-encrypt-environment = var.lets-encrypt-environment, rancher-domain-name = var.rancher-domain-name })
+    command = templatefile("../install-rancher.sh", { lets-encrypt-email = var.lets-encrypt-email, lets-encrypt-environment = var.lets-encrypt-environment, rancher-domain-name = module.front-end-lb.ip-address })
   }
 }
 
-resource "null_resource" "wait_for_rancher_ingress" {
-  depends_on = [null_resource.install_rancher]
+resource "null_resource" "wait-for-rancher-ingress" {
+  depends_on = [null_resource.install-rancher]
   provisioner "local-exec" {
     command = "sleep 30"
   }
 }
 
 resource "random_string" "random" {
-  depends_on = [null_resource.wait_for_rancher_ingress]
+  depends_on = [null_resource.wait-for-rancher-ingress]
   length = 32
   special = true
 }
@@ -190,6 +208,24 @@ resource "random_string" "random" {
 module "rancherbootstrap-module" {
   source = "./rancherbootstrap-module"
 
-  rancher-url = "https://${var.rancher-domain-name}/"
+  rancher-url = "https://module.front-end-lb.ip-address/"
   admin-password = random_string.random.result
+}
+
+module "serviceprincipal-module" {
+  source = "./serviceprincipal-module"
+
+  resource-group-id = module.k8s-resource-group.resource-group.id
+  application-name = "hybrid-windows"
+}
+
+data azurerm_subscription "current" {}
+
+module "cluster-module" {
+  source = "./cluster-module"
+
+  cluster-name = "Windows-Hybrid"
+  rancher_api_url = module.rancherbootstrap-module.rancher-url
+  rancher_api_token = module.rancherbootstrap-module.admin-token
+  service-principal  = {client-id=module.serviceprincipal-module.application-id,client-secret=module.serviceprincipal-module.secret,subscription-id=data.azurerm_subscription.current.subscription_id,tenant-id=data.azurerm_subscription.current.tenant_id}
 }

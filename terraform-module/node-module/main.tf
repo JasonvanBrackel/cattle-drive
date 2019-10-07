@@ -55,7 +55,7 @@ resource "azurerm_virtual_machine" "vm" {
   os_profile {
     computer_name = "${local.prefix}-${count.index}-vm"
     admin_username = var.node-definition.admin-username
-    custom_data    = templatefile("./cloud-init.template", { docker-version = var.node-definition.docker-version, admin-username = var.node-definition.admin-username, additionalCommand = var.additionalCommand  })
+    custom_data    = templatefile("./cloud-init.template", { docker-version = var.node-definition.docker-version, admin-username = var.node-definition.admin-username, additionalCommand = var.commandToExecute  })
   }
   os_profile_linux_config {
     disable_password_authentication = true    

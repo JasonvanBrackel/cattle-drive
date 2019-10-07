@@ -2,6 +2,8 @@ provider "rancher2"  {
   alias = "bootstrap"
   api_url   = var.rancher-url
   bootstrap = true
+
+  insecure = true
 }
 
 resource "rancher2_bootstrap" "admin" {

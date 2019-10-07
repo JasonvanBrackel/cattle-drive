@@ -1,3 +1,9 @@
+variable "cluster-name" {
+  description = "Name of the cluster managed by Rancher"
+  type = string
+}
+
+
 variable "rancher_api_url" {
   description = "Url to the Rancher API"
   type = string
