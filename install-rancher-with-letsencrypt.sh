@@ -29,4 +29,5 @@ helm install rancher-latest/rancher \
   --set hostname="$rancher_hostname" \
   --set auditLog.level="1" \
   --set addLocal="true" \
+  --timeout="600" \
   --wait

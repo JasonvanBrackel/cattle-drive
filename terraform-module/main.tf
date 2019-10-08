@@ -188,16 +188,21 @@ locals {
   domain-name = module.front-end-lb.fqdn
 }
 
-resource "null_resource" "install-cert-manager" {
-  # depends_on = [null_resource.wait-for-dns]
+resource "null_resource" "initialize-helm" {
   depends_on = [local_file.kube-cluster-yaml]
+  provisioner "local-exec" {
+    command = file("../initialize-helm.sh")
+  }
+}
+
+resource "null_resource" "install-cert-manager" {
+  depends_on = [null_resource.initialize-helm]
   provisioner "local-exec" {
     command = file("../install-cert-manager.sh")
   }
 }
 
 resource "null_resource" "install-rancher" {
-  # depends_on = [null_resource.wait-for-dns]
   depends_on = [null_resource.install-cert-manager]
   provisioner "local-exec" {
     command = templatefile("../install-rancher.sh", { lets-encrypt-email = var.lets-encrypt-email, lets-encrypt-environment = var.lets-encrypt-environment, rancher-domain-name = local.domain-name })
@@ -237,8 +242,58 @@ data azurerm_subscription "current" {}
 module "cluster-module" {
   source = "./cluster-module"
 
-  cluster-name = "WindowsHybrid"
+  cluster-name = "windowshybrid"
   rancher_api_url = module.rancherbootstrap-module.rancher-url
   rancher_api_token = module.rancherbootstrap-module.admin-token
   service-principal  = {client-id=module.serviceprincipal-module.application-id,client-secret=module.serviceprincipal-module.secret,subscription-id=data.azurerm_subscription.current.subscription_id,tenant-id=data.azurerm_subscription.current.tenant_id}
 }
+
+module "k8s-etcd" {
+  source = "./node-module"
+  prefix = "etcd"
+
+  resource-group = module.k8s-resource-group.resource-group
+  node-count = var.k8s-etcd-node-count
+  subnet-id = module.k8s-network.subnet-id
+  address-starting-index = 0
+  node-definition = local.node-definition
+  commandToExecute = "${module.cluster-module.linux-node-command} --etcd"
+}
+
+module "k8s-control" {
+  source = "./node-module"
+  prefix = "control"
+
+  resource-group = module.k8s-resource-group.resource-group
+  node-count = var.k8s-controlplane-node-count
+  subnet-id = module.k8s-network.subnet-id
+  address-starting-index = var.k8s-etcd-node-count
+  node-definition = local.node-definition
+  commandToExecute = "${module.cluster-module.linux-node-command} --controlplane"
+}
+
+module "k8s-worker" {
+  source = "./node-module"
+  prefix = "worker"
+
+  resource-group = module.k8s-resource-group.resource-group
+  node-count = var.k8s-worker-node-count
+  subnet-id = module.k8s-network.subnet-id
+  address-starting-index = var.k8s-etcd-node-count + var.k8s-controlplane-node-count
+  node-definition = local.node-definition
+  commandToExecute = "${module.cluster-module.linux-node-command} --worker"
+}
+
+module "k8s-windows" {
+  source = "./windowsnode-module"
+  prefix = "win"
+
+  resource-group = module.k8s-resource-group.resource-group
+  node-count = var.k8s-windows-node-count
+  subnet-id = module.k8s-network.subnet-id
+  address-starting-index = var.k8s-etcd-node-count + var.k8s-controlplane-node-count + var.k8s-worker-node-count
+  node-definition = local.node-definition
+  commandToExecute = module.cluster-module.windows-node-command
+}
+
+

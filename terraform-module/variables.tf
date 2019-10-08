@@ -98,3 +98,9 @@ variable "k8s-worker-node-count" {
   description = "Number of worker nodes in the k8s cluster"
   default = 1 
 }
+
+variable "k8s-windows-node-count" {
+  type = number
+  description = "Number of windows nodes in the k8s cluster"
+  default = 1 
+}
