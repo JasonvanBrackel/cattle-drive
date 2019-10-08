@@ -27,7 +27,7 @@ locals {
     admin-username = var.node-credentials.admin-username
     ssh-keypath = var.node-credentials.ssh-keypath
     ssh-keypath-private = var.node-credentials.ssh-keypath-private
-    size = "Standard_DS1_v2"
+    size = "Standard_D2s_v3"
     disk-type = "Premium_LRS"
     publisher = "Canonical"
     offer     = "UbuntuServer"
@@ -90,7 +90,7 @@ module "front-end-lb" {
 
   prefix = "worker"
   resource-group = module.rancher-resource-group.resource-group
-  domain-name = var.rancher-domain-name
+  domain-name-label = var.rancher-domain-name
   backend-nics = module.rancher-worker.privateIps
 }
 
@@ -184,11 +184,23 @@ resource "local_file" "kube-cluster-yaml" {
 # }
 # ############### END Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
 
-resource "null_resource" "install-rancher" {
+locals {
+  domain-name = module.front-end-lb.fqdn
+}
+
+resource "null_resource" "install-cert-manager" {
   # depends_on = [null_resource.wait-for-dns]
   depends_on = [local_file.kube-cluster-yaml]
   provisioner "local-exec" {
-    command = templatefile("../install-rancher.sh", { lets-encrypt-email = var.lets-encrypt-email, lets-encrypt-environment = var.lets-encrypt-environment, rancher-domain-name = module.front-end-lb.ip-address })
+    command = file("../install-cert-manager.sh")
+  }
+}
+
+resource "null_resource" "install-rancher" {
+  # depends_on = [null_resource.wait-for-dns]
+  depends_on = [null_resource.install-cert-manager]
+  provisioner "local-exec" {
+    command = templatefile("../install-rancher.sh", { lets-encrypt-email = var.lets-encrypt-email, lets-encrypt-environment = var.lets-encrypt-environment, rancher-domain-name = local.domain-name })
   }
 }
 
@@ -206,9 +218,10 @@ resource "random_string" "random" {
 }
 
 module "rancherbootstrap-module" {
+  
   source = "./rancherbootstrap-module"
 
-  rancher-url = "https://module.front-end-lb.ip-address/"
+  rancher-url = "https://${local.domain-name}/"
   admin-password = random_string.random.result
 }
 
@@ -224,7 +237,7 @@ data azurerm_subscription "current" {}
 module "cluster-module" {
   source = "./cluster-module"
 
-  cluster-name = "Windows-Hybrid"
+  cluster-name = "WindowsHybrid"
   rancher_api_url = module.rancherbootstrap-module.rancher-url
   rancher_api_token = module.rancherbootstrap-module.admin-token
   service-principal  = {client-id=module.serviceprincipal-module.application-id,client-secret=module.serviceprincipal-module.secret,subscription-id=data.azurerm_subscription.current.subscription_id,tenant-id=data.azurerm_subscription.current.tenant_id}

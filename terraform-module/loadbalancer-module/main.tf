@@ -3,7 +3,7 @@ resource "azurerm_public_ip" "frontendloadbalancer_publicip" {
   location            = var.resource-group.location
   resource_group_name = var.resource-group.name
   allocation_method   = "Static"
-  domain_name_label   = replace(var.domain-name, ".", "-")
+  domain_name_label   = replace(var.domain-name-label, ".", "-") 
 }
 
 resource "azurerm_lb" "frontendloadbalancer" {
