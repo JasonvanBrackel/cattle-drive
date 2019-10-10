@@ -1,3 +1,7 @@
+provider "azurerm" {
+
+}
+
 locals {
   prefix = var.prefix
 }
@@ -63,14 +67,8 @@ resource "azurerm_virtual_machine" "vm" {
   }
 }
 
-resource "azurerm_virtual_machine_extension" "join-rancher" {
-  name                 = "join-rancher"
-  location             = var.resource-group.location
-  resource_group_name  = var.resource-group.name
-  virtual_machine_name = azurerm_virtual_machine.vm.name
-  publisher            = "Microsoft.Azure.Extensions"
-  type                 = "CustomScript"
-  type_handler_version = "2.0"
-
-  settings = templatefile("../join-rancher.template", {commandToExecute=var.commandToExecute})
+locals {
+  nodes_output = azurerm_virtual_machine.vm
+  public_ip_address_output = azurerm_public_ip.publicIp.*
+  private_ip_address_output = azurerm_network_interface.nic.*  
 }

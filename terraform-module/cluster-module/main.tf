@@ -14,9 +14,15 @@ provider "rancher2" {
 resource "rancher2_cluster" "manager" {
   name = var.cluster-name
   description = "Hybrid cluster with Windows and Linux workloads"
+  # windows_prefered_cluster = true Not currently supported
   rke_config {
     network {
-      plugin = "canal"
+      plugin = "flannel"
+      options = {
+        flannel_backend_port = 4789
+        flannel_backend_type = "vxlan"
+        flannel_backend_vni = 4096
+      }
     }
     cloud_provider {
       azure_cloud_provider {

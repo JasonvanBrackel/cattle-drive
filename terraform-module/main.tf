@@ -284,6 +284,24 @@ module "k8s-worker" {
   commandToExecute = "${module.cluster-module.linux-node-command} --worker"
 }
 
+resource "random_string" "windows-admin-password" {
+  length = 32
+  special = true
+}
+
+locals {
+  windows-node-definition = {
+    admin-username = local.node-definition.admin-username
+    admin-password = random_string.windows-admin-password.result
+    size = "Standard_D2s_v3"
+    disk-type = "Premium_LRS"
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "Datacenter-Core-1903-with-Containers-smalldisk"
+    version   = "latest"
+  }
+}
+
 module "k8s-windows" {
   source = "./windowsnode-module"
   prefix = "win"
@@ -292,8 +310,16 @@ module "k8s-windows" {
   node-count = var.k8s-windows-node-count
   subnet-id = module.k8s-network.subnet-id
   address-starting-index = var.k8s-etcd-node-count + var.k8s-controlplane-node-count + var.k8s-worker-node-count
-  node-definition = local.node-definition
-  commandToExecute = module.cluster-module.windows-node-command
+  node-definition = local.windows-node-definition
 }
 
-
+module "join-rancher" {
+  source = "./join-rancher-module"
+  
+  resource-group = module.k8s-resource-group.resource-group
+  node-count = var.k8s-windows-node-count
+  nodes = module.k8s-windows.nodes
+  public-Ips = module.k8s-windows.publicIps
+  private-Ips = module.k8s-windows.privateIps
+  join-command = module.cluster-module.windows-node-commmand
+}

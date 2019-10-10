@@ -1,3 +1,7 @@
+provider "azurerm" {
+
+}
+
 resource "azurerm_public_ip" "frontendloadbalancer_publicip" {
   name                = "rke-lb-publicip"
   location            = var.resource-group.location

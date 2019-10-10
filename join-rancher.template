@@ -1,5 +1,0 @@
-<<SETTINGS
-    {
-        "commandToExecute": "${commandToExecute}"
-    }
-SETTINGS

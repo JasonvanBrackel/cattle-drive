@@ -16,12 +16,6 @@ variable "address-starting-index" {
   type = number
 }
 
-variable "commandToExecute" {
-  description = "Command added to the script extension to execute at setup time"
-  type = string
-}
-
-
 variable "subnet-id" {
   description = "Subnet where the nics are created."
 }
@@ -36,7 +30,7 @@ variable "node-definition" {
     disk-type = "Premium_LRS"
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServerSemiAnnual"
-    sku       = "Datacenter-Core-1809-with-Containers-smalldisk"
+    sku       = "Datacenter-Core-1903-with-Containers-smalldisk"
     version   = "latest"
   }
 }

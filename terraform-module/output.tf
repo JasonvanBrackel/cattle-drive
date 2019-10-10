@@ -1,12 +1,18 @@
 output "rancher-domain-name" {
   description = "Domain name of the Rancher server"
-  value = var.rancher-domain-name
+  value = "https://${local.domain-name}/"
 }
 
 output "rancher-admin-password" {
-  sensitive = true
+  sensitive = false
   description = "Admin password for Rancher server"
   value = module.rancherbootstrap-module.admin-password
+}
+
+output "windows-admin-password" {
+  sensitive = false
+  description = "Windows Admin password for server nodes"
+  value = module.k8s-windows.admin-password
 }
 
 output "lets-encrypt-environment" {

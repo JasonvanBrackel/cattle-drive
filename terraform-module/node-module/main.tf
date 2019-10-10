@@ -1,3 +1,7 @@
+provider "azurerm" {
+
+}
+
 locals {
   prefix = var.prefix
 }
@@ -55,7 +59,7 @@ resource "azurerm_virtual_machine" "vm" {
   os_profile {
     computer_name = "${local.prefix}-${count.index}-vm"
     admin_username = var.node-definition.admin-username
-    custom_data    = templatefile("./cloud-init.template", { docker-version = var.node-definition.docker-version, admin-username = var.node-definition.admin-username, additionalCommand = var.commandToExecute  })
+    custom_data    = templatefile("./cloud-init.template", { docker-version = var.node-definition.docker-version, admin-username = var.node-definition.admin-username, additionalCommand = "${var.commandToExecute} --address ${azurerm_public_ip.publicIp[count.index].ip_address} --internal-address ${azurerm_network_interface.nic[count.index].ip_configuration[0].private_ip_address}"  })
   }
   os_profile_linux_config {
     disable_password_authentication = true    
