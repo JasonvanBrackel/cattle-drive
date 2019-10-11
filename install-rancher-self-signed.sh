@@ -4,8 +4,6 @@
 config_path="$(pwd)/kube_config_cluster.yml"
 
 # Terraform Templates
-lets_encrypt_email=${lets-encrypt-email}
-lets_encrypt_environment=${lets-encrypt-environment}
 rancher_hostname=${rancher-domain-name}
 
 helm repo add rancher-stable https://releases.rancher.com/server-charts/stable

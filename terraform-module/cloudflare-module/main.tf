@@ -5,7 +5,7 @@ provider "cloudflare" {
 
 data "cloudflare_zones" "zones" {
   filter {
-    name   = "mymanagementcluster.*"
+    name   = "${replace(var.domain-name, ".com", "")}.*" # Modify for other suffixes
     status = "active"
     paused = false
   }

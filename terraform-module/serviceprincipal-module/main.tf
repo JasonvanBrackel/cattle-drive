@@ -1,3 +1,7 @@
+provider "azurerm" {
+
+}
+
 resource "azuread_application" "ad-application" {
   name                       = var.application-name
   homepage                   = "https://${var.application-name}"
@@ -26,6 +30,3 @@ resource "azuread_service_principal_password" "service-principal-password" {
   value                = random_string.random.result
   end_date             = timeadd(timestamp(), "720h") 
 }
-
-
-
