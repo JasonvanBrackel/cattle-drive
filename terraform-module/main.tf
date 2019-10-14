@@ -3,6 +3,7 @@ provider "azurerm" {
 
 }
 
+data azurerm_subscription "current" {}
 
 ## Resource Groups 
 # Rancher Resource Group
@@ -230,14 +231,6 @@ module "rancherbootstrap-module" {
   admin-password = random_string.random.result
 }
 
-module "serviceprincipal-module" {
-  source = "./serviceprincipal-module"
-
-  resource-group-id = module.k8s-resource-group.resource-group.id
-  application-name = "hybrid-windows"
-}
-
-data azurerm_subscription "current" {}
 
 module "cluster-module" {
   source = "./cluster-module"
@@ -245,7 +238,9 @@ module "cluster-module" {
   cluster-name = "windowshybrid"
   rancher_api_url = module.rancherbootstrap-module.rancher-url
   rancher_api_token = module.rancherbootstrap-module.admin-token
-  service-principal  = {client-id=module.serviceprincipal-module.application-id,client-secret=module.serviceprincipal-module.secret,subscription-id=data.azurerm_subscription.current.subscription_id,tenant-id=data.azurerm_subscription.current.tenant_id}
+  subscription-id = data.azurerm_subscription.current.subscription_id
+  tenant-id = data.azurerm_subscription.current.tenant_id
+  resource-group = module.rancher-resource-group.resource-group
 }
 
 module "k8s-etcd" {

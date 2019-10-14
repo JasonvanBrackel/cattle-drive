@@ -14,7 +14,14 @@ variable "rancher_api_token" {
   type = string
 }
 
-variable "service-principal" {
-  description = "Service principal for the Azure Provider"
-  type = object({client-id=string,client-secret=string,subscription-id=string,tenant-id=string})  
+variable resource-group {
+  description = "Resource group of the service principal"
+}
+
+variable tenant-id {
+  description = "Tenant for this cluster"
+}
+
+variable subscription-id {
+  description = "Subscription for this cluster"
 }

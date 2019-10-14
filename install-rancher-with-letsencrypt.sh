@@ -17,6 +17,10 @@ helm repo add rancher-alpha https://releases.rancher.com/server-charts/alpha
 helm repo update
 
 # Install Rancher
+echo "Let's Encrypt Email $lets_encrypt_email"
+echo "Let's Encrypt Environment $lets_encrypt_environment"
+echo "Rancher Hostname $rancher_hostname"
+
 helm install rancher-latest/rancher \
   --version v2.3.0 \
   --name rancher \

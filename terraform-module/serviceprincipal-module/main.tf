@@ -14,10 +14,6 @@ resource "azuread_service_principal" "service-principal" {
   app_role_assignment_required  = true
 }
 
-resource "random_string" "random" {
-  length = 32
-  special = true
-}
 
 resource "azurerm_role_assignment" "serviceprincipal-role" {
   scope                = var.resource-group-id
@@ -25,8 +21,13 @@ resource "azurerm_role_assignment" "serviceprincipal-role" {
   principal_id         = azuread_service_principal.service-principal.id
 }
 
+resource "random_string" "random" {
+  length = 32
+  special = true
+}
+
 resource "azuread_service_principal_password" "service-principal-password" {
   service_principal_id = azuread_service_principal.service-principal.id
   value                = random_string.random.result
-  end_date             = timeadd(timestamp(), "720h") 
+  end_date_relative    = "720h"
 }

@@ -1,6 +1,3 @@
-provider "azurerm" {
-
-}
 
 # Configure the Rancher2 provider
 provider "rancher2" {
@@ -9,6 +6,7 @@ provider "rancher2" {
 
   insecure = true
 }
+
 
 ################################## Rancher
 resource "rancher2_cluster" "manager" {
@@ -24,13 +22,13 @@ resource "rancher2_cluster" "manager" {
         flannel_backend_vni = 4096
       }
     }
-    cloud_provider {
-      azure_cloud_provider {
-        aad_client_id = var.service-principal.client-id
-        aad_client_secret = var.service-principal.client-secret
-        subscription_id = var.service-principal.subscription-id
-        tenant_id = var.service-principal.tenant-id
-      }
-    }
+    # cloud_provider {
+    #   azure_cloud_provider {
+    #     aad_client_id =  module.serviceprincipal-module.application-id
+    #     aad_client_secret = module.serviceprincipal-module.secret
+    #     subscription_id = var.subscription-id
+    #     tenant_id = var.tenant-id
+    #   }
+    # }
   }
 }
