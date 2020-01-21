@@ -3,7 +3,7 @@ provider "cloudflare" {
   api_key = "${var.cloudflare-token}"
 }
 
-data "cloudflare_zones" "zones" {
+data "cloudflare_zones" "rancher-zone" {
   filter {
     name   = "${replace(var.domain-name, ".com", "")}.*" # Modify for other suffixes
     status = "active"
@@ -13,7 +13,7 @@ data "cloudflare_zones" "zones" {
 
 # Add a record to the domain
 resource "cloudflare_record" "domain" {
-  zone_id = data.cloudflare_zones.zones.zones[0].id
+  zone_id = data.cloudflare_zones.rancher-zone.zones[0].id
   name   = var.domain-name
   value  = var.ip-address
   type   = "A"

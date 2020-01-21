@@ -160,29 +160,29 @@ resource "local_file" "kube-cluster-yaml" {
 }
 
 # ############### Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
-# module "cloudflare-dns" {
-#   source = "./cloudflare-module"
+module "cloudflare-dns" {
+  source = "./cloudflare-module"
   
-#   domain-name = var.rancher-domain-name
-#   cloudflare-email = var.cloudflare-email
-#   cloudflare-token = var.cloudflare-token
-#   ip-address = module.front-end-lb.ip-address
-# }
+  domain-name = var.rancher-domain-name
+  cloudflare-email = var.cloudflare-email
+  cloudflare-token = var.cloudflare-token
+  ip-address = module.front-end-lb.ip-address
+}
 
 
-# resource "null_resource" "flush-dns-cache" {
-#   depends_on = [local_file.kube-cluster-yaml]
-#   provisioner "local-exec" {
-#     command = "sudo service network-manager restart"
-#   }
-# }
+resource "null_resource" "flush-dns-cache" {
+  depends_on = [local_file.kube-cluster-yaml]
+  provisioner "local-exec" {
+    command = "sudo service network-manager restart"
+  }
+}
 
-# resource "null_resource" "wait-for-dns" {
-#   depends_on = [null_resource.flush-dns-cache]
-#   provisioner "local-exec" {
-#     command = "sleep 30"
-#   }
-# }
+resource "null_resource" "wait-for-dns" {
+  depends_on = [null_resource.flush-dns-cache]
+  provisioner "local-exec" {
+    command = "sleep 30"
+  }
+}
 # ############### END Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
 
 locals {

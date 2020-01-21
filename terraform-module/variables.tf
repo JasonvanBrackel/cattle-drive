@@ -12,14 +12,14 @@ variable "lets-encrypt-environment" {
 }
 
 # Cloudflare
-# variable "cloudflare-email" {
-#   description = "Email Addres for Cloudflare"
-#   type = string
-# }
+variable "cloudflare-email" {
+  description = "Email Addres for Cloudflare"
+  type = string
+}
 
-# variable "cloudflare-token" {
-#   description = "Authentication token for Cloudflare"
-# }
+variable "cloudflare-token" {
+  description = "Authentication token for Cloudflare"
+}
 
 
 # Node Credentials
