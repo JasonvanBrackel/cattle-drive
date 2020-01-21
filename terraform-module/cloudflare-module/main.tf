@@ -1,6 +1,6 @@
 provider "cloudflare" {
-  email = "${var.cloudflare-email}"
-  api_key = "${var.cloudflare-token}"
+  email = var.cloudflare-email
+  api_key = var.cloudflare-token
 }
 
 data "cloudflare_zones" "rancher-zone" {
