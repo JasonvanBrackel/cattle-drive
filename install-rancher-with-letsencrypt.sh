@@ -22,7 +22,7 @@ echo "Let's Encrypt Environment $lets_encrypt_environment"
 echo "Rancher Hostname $rancher_hostname"
 
 helm install rancher-latest/rancher \
-  --version v2.3.0 \
+  --version v2.3.5 \
   --name rancher \
   --namespace cattle-system \
   --kube-context local \

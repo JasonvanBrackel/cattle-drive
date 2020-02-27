@@ -22,6 +22,66 @@ module "k8s-resource-group" {
   region = var.k8s-region
 }
 
+
+## Service Principals
+resource "random_password" "rancher-serviceprincipal-password" {
+  length = 16
+}
+
+module "rancher-serviceprincipal-module" {
+  source = "./serviceprincipal-module"
+
+  resource-group-id = module.rancher-resource-group.resource-group.id
+  application-name = "rancher-ccm-principal"
+  password = random_password.rancher-serviceprincipal-password.result
+}
+
+resource "random_password" "k8s-serviceprincipal-password" {
+  length = 16
+}
+
+module "k8s-serviceprincipal-module" {
+  source = "./serviceprincipal-module"
+
+  resource-group-id = module.k8s-resource-group.resource-group.id
+  application-name = "k8s-ccm-principal"
+  password = random_password.k8s-serviceprincipal-password.result
+}
+
+# Storage Accounts for KeyVault
+module "rancher-storage-account" {
+  source = "./azure-storage-account-module"
+
+  resource-group = module.rancher-resource-group.resource-group
+  storage-account-name = "rancherkeyvault"
+}
+
+module "k8s-storage-account" {
+  source = "./azure-storage-account-module"
+
+  resource-group = module.k8s-resource-group.resource-group
+  storage-account-name = "k8skeyvault"
+}
+
+# KeyVaults to encrypt etcd
+module "rancher-keyvault" {
+  source = "./azure-keyvault-module"
+
+  tenant-id = data.azurerm_subscription.current.tenant_id
+  resource-group = module.rancher-resource-group.resource-group
+  vault-name = "rancherkeyvault"
+  serviceprincipal-id = module.rancher-serviceprincipal-module.service-principal-object-id
+} 
+
+module "k8s-keyvault" {
+  source = "./azure-keyvault-module"
+
+  tenant-id = data.azurerm_subscription.current.tenant_id
+  resource-group = module.k8s-resource-group.resource-group
+  vault-name = "k8skeyvault"
+  serviceprincipal-id = module.k8s-serviceprincipal-module.service-principal-object-id
+} 
+
 # Nodes
 locals {
    node-definition = {
@@ -170,19 +230,20 @@ module "cloudflare-dns" {
 }
 
 
-resource "null_resource" "flush-dns-cache" {
-  depends_on = [local_file.kube-cluster-yaml]
-  provisioner "local-exec" {
-    command = "sudo service network-manager restart"
-  }
-}
+# resource "null_resource" "flush-dns-cache" {
+#   depends_on = [local_file.kube-cluster-yaml]
+#   provisioner "local-exec" {
+#     command = "sudo service network-manager restart"
+#   }
+# }
 
-resource "null_resource" "wait-for-dns" {
-  depends_on = [null_resource.flush-dns-cache]
-  provisioner "local-exec" {
-    command = "sleep 30"
-  }
-}
+# resource "null_resource" "wait-for-dns" {
+#   depends_on = [null_resource.flush-dns-cache]
+#   provisioner "local-exec" {
+#     command = "sleep 30"
+#   }
+# }
+
 # ############### END Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
 
 locals {

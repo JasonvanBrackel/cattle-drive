@@ -7,3 +7,8 @@ output "secret" {
   description = "Client secret for the service principal"
   value = azuread_service_principal_password.service-principal-password.value
 }
+
+output "service-principal-object-id" {
+  description = "Object id of the created service principal"  
+  value = azuread_service_principal.service-principal.id
+}

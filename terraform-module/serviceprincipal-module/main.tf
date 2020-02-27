@@ -21,13 +21,8 @@ resource "azurerm_role_assignment" "serviceprincipal-role" {
   principal_id         = azuread_service_principal.service-principal.id
 }
 
-resource "random_string" "random" {
-  length = 32
-  special = true
-}
-
 resource "azuread_service_principal_password" "service-principal-password" {
   service_principal_id = azuread_service_principal.service-principal.id
-  value                = random_string.random.result
+  value                = var.password
   end_date_relative    = "720h"
 }

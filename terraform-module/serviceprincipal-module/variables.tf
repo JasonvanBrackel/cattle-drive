@@ -5,3 +5,7 @@ variable "resource-group-id" {
 variable "application-name" {
     description = "Azure AD Application name to create for the service principal"
 }
+
+variable "password" {   
+    description = "Password for the Azure AD Service Principal"
+}
