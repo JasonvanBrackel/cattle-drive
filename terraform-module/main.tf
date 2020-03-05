@@ -40,47 +40,48 @@ resource "random_password" "k8s-serviceprincipal-password" {
   length = 16
 }
 
-module "k8s-serviceprincipal-module" {
-  source = "./serviceprincipal-module"
+### Disabled while I diagnose upstream Azure AD / Storage account 403 auth issues
+# module "k8s-serviceprincipal-module" {
+#   source = "./serviceprincipal-module"
 
-  resource-group-id = module.k8s-resource-group.resource-group.id
-  application-name = "k8s-ccm-principal"
-  password = random_password.k8s-serviceprincipal-password.result
-}
+#   resource-group-id = module.k8s-resource-group.resource-group.id
+#   application-name = "k8s-ccm-principal"
+#   password = random_password.k8s-serviceprincipal-password.result
+# }
 
-# Storage Accounts for KeyVault
-module "rancher-storage-account" {
-  source = "./azure-storage-account-module"
+# # Storage Accounts for KeyVault
+# module "rancher-storage-account" {
+#   source = "./azure-storage-account-module"
 
-  resource-group = module.rancher-resource-group.resource-group
-  storage-account-name = "rancherkeyvault"
-}
+#   resource-group = module.rancher-resource-group.resource-group
+#   storage-account-name = "catranchkeyvault"
+# }
 
-module "k8s-storage-account" {
-  source = "./azure-storage-account-module"
+# module "k8s-storage-account" {
+#   source = "./azure-storage-account-module"
 
-  resource-group = module.k8s-resource-group.resource-group
-  storage-account-name = "k8skeyvault"
-}
+#   resource-group = module.k8s-resource-group.resource-group
+#   storage-account-name = "catk8skeyvault"
+# }
 
-# KeyVaults to encrypt etcd
-module "rancher-keyvault" {
-  source = "./azure-keyvault-module"
+# # KeyVaults to encrypt etcd
+# module "rancher-keyvault" {
+#   source = "./azure-keyvault-module"
 
-  tenant-id = data.azurerm_subscription.current.tenant_id
-  resource-group = module.rancher-resource-group.resource-group
-  vault-name = "rancherkeyvault"
-  serviceprincipal-id = module.rancher-serviceprincipal-module.service-principal-object-id
-} 
+#   tenant-id = data.azurerm_subscription.current.tenant_id
+#   resource-group = module.rancher-resource-group.resource-group
+#   vault-name = "catranchkeyvault"
+#   serviceprincipal-id = module.rancher-serviceprincipal-module.service-principal-object-id
+# } 
 
-module "k8s-keyvault" {
-  source = "./azure-keyvault-module"
+# module "k8s-keyvault" {
+#   source = "./azure-keyvault-module"
 
-  tenant-id = data.azurerm_subscription.current.tenant_id
-  resource-group = module.k8s-resource-group.resource-group
-  vault-name = "k8skeyvault"
-  serviceprincipal-id = module.k8s-serviceprincipal-module.service-principal-object-id
-} 
+#   tenant-id = data.azurerm_subscription.current.tenant_id
+#   resource-group = module.k8s-resource-group.resource-group
+#   vault-name = "catk8skeyvault"
+#   serviceprincipal-id = module.k8s-serviceprincipal-module.service-principal-object-id
+# } 
 
 # Nodes
 locals {
@@ -220,14 +221,14 @@ resource "local_file" "kube-cluster-yaml" {
 }
 
 # ############### Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
-module "cloudflare-dns" {
-  source = "./cloudflare-module"
+# module "cloudflare-dns" {
+#   source = "./cloudflare-module"
   
-  domain-name = var.rancher-domain-name
-  cloudflare-email = var.cloudflare-email
-  cloudflare-token = var.cloudflare-token
-  ip-address = module.front-end-lb.ip-address
-}
+#   domain-name = var.rancher-domain-name
+#   cloudflare-email = var.cloudflare-email
+#   cloudflare-token = var.cloudflare-token
+#   ip-address = module.front-end-lb.ip-address
+# }
 
 
 # resource "null_resource" "flush-dns-cache" {
