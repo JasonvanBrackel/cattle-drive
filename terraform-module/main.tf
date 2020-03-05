@@ -250,6 +250,8 @@ locals {
   domain-name = module.front-end-lb.fqdn
 }
 
+
+
 resource "null_resource" "initialize-helm" {
   depends_on = [local_file.kube-cluster-yaml]
   provisioner "local-exec" {
@@ -264,15 +266,24 @@ resource "null_resource" "install-cert-manager" {
   }
 }
 
-resource "null_resource" "install-rancher" {
-  depends_on = [null_resource.install-cert-manager]
-  provisioner "local-exec" {
-    command = templatefile("../install-rancher.sh", { lets-encrypt-email = var.lets-encrypt-email, lets-encrypt-environment = var.lets-encrypt-environment, rancher-domain-name = local.domain-name })
-  }
+module "rancher-setup-module"  {
+  source = "./rancher-setup-module"
+
+  kubeconfig-path = local_file.kube-cluster-yaml.filename
+  lets-encrypt-email = var.lets-encrypt-email
+  lets-encrypt-environment = var.lets-encrypt-environment
+  rancher-hostname = local.domain-name
 }
 
+# resource "null_resource" "install-rancher" {
+#   depends_on = [null_resource.install-cert-manager]
+#   provisioner "local-exec" {
+#     command = templatefile("../install-rancher.sh", { lets-encrypt-email = var.lets-encrypt-email, lets-encrypt-environment = var.lets-encrypt-environment, rancher-domain-name = local.domain-name })
+#   }
+# }
+
 resource "null_resource" "wait-for-rancher-ingress" {
-  depends_on = [null_resource.install-rancher]
+  depends_on = [module.rancher-setup-module]
   provisioner "local-exec" {
     command = "sleep 30"
   }

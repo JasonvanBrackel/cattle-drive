@@ -66,7 +66,7 @@ variable "rancher-controlplane-node-count" {
 variable "rancher-worker-node-count" {
   type = number
   description = "Number of worker nodes in the RKE Cluster for Rancher HA"
-  default = 3 
+  default = 1 
 }
 
 # Kubernetes Cluster
