@@ -59,11 +59,6 @@ resource "helm_release" "rancher" {
   }
 
   set {
-    name = "auditLog.level"
-    value = "1"
-  }
-
-  set {
     name = "addLocal"
     value = "true"
   }
