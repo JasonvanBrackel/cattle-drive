@@ -270,6 +270,8 @@ resource "null_resource" "install-cert-manager" {
 module "rancher-setup-module"  {
   source = "./rancher-setup-module"
 
+  depends_on = [null_resource.install-cert-manager]
+  
   kubeconfig-path = local_file.kube-cluster-yaml.filename
   lets-encrypt-email = var.lets-encrypt-email
   lets-encrypt-environment = var.lets-encrypt-environment
