@@ -19,7 +19,7 @@ resource "helm_release" "rancher" {
   repository = data.helm_repository.rancher-stable.metadata[0].name
   chart = "rancher-latest/rancher"
   version = "v2.3.5"
-  timeout = "600"
+  timeout = 600
   wait = true
 
   set {

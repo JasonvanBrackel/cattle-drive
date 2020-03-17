@@ -3,7 +3,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_key_vault" "kubernetes-vault" {
-  name                        = "k8s-vault"
+  name                        = var.vault-name
   location                    = var.resource-group.location
   resource_group_name         = var.resource-group.name
   tenant_id                   = var.tenant-id

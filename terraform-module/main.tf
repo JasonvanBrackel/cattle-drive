@@ -220,14 +220,14 @@ resource "local_file" "kube-cluster-yaml" {
 }
 
 # ############### Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
-module "cloudflare-dns" {
-  source = "./cloudflare-module"
+# module "cloudflare-dns" {
+#   source = "./cloudflare-module"
   
-  domain-name = var.rancher-domain-name
-  cloudflare-email = var.cloudflare-email
-  cloudflare-token = var.cloudflare-token
-  ip-address = module.front-end-lb.ip-address
-}
+#   domain-name = var.rancher-domain-name
+#   cloudflare-email = var.cloudflare-email
+#   cloudflare-token = var.cloudflare-token
+#   ip-address = module.front-end-lb.ip-address
+# }
 
 
 # resource "null_resource" "flush-dns-cache" {
@@ -249,8 +249,6 @@ module "cloudflare-dns" {
 locals {
   domain-name = module.front-end-lb.fqdn
 }
-
-
 
 resource "null_resource" "initialize-helm" {
   depends_on = [local_file.kube-cluster-yaml]
@@ -289,7 +287,7 @@ resource "null_resource" "wait-for-rancher-ingress" {
   }
 }
 
-resource "random_string" "random" {
+resource "random_password" "admin-password" {
   depends_on = [null_resource.wait-for-rancher-ingress]
   length = 32
   special = true
@@ -300,7 +298,7 @@ module "rancherbootstrap-module" {
   source = "./rancherbootstrap-module"
 
   rancher-url = "https://${local.domain-name}/"
-  admin-password = random_string.random.result
+  admin-password = random_password.admin-password.result
 }
 
 
@@ -351,7 +349,7 @@ module "k8s-worker" {
   commandToExecute = "${module.cluster-module.linux-node-command} --worker"
 }
 
-resource "random_string" "windows-admin-password" {
+resource "random_password" "windows-admin-password" {
   length = 32
   special = true
 }
@@ -359,7 +357,7 @@ resource "random_string" "windows-admin-password" {
 locals {
   windows-node-definition = {
     admin-username = local.node-definition.admin-username
-    admin-password = random_string.windows-admin-password.result
+    admin-password = random_password.windows-admin-password.result
     size = "Standard_D2s_v3"
     disk-type = "Premium_LRS"
     publisher = "MicrosoftWindowsServer"
